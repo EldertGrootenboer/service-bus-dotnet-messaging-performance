@@ -54,7 +54,7 @@ namespace ThroughputTest
             var experiments = new Experiment[]
             {
                 // new IncreaseInflightSendsExperiment(50, metrics, settings),
-                // new IncreaseInflightReceivesExperiment(10, metrics, settings)
+                // new IncreaseInflightReceivesExperiment(50, metrics, settings)
             };
             app.Run(experiments).Wait();
             Console.WriteLine("Complete");

@@ -45,6 +45,11 @@ namespace ThroughputTest
             var secondObservation = await ((IObservable<ReceiveMetrics>)Metrics).Buffer(TimeSpan.FromSeconds(5)).FirstAsync();
             var secondMessageCount = secondObservation.Sum(i => i.Messages);
 
+            if(Settings.DebugMode)
+            {
+                Console.WriteLine($"First message count: {firstMessageCount} Second message count: {secondMessageCount}");
+            }
+
             if (secondMessageCount > firstMessageCount)
             {
                 return new IncreaseInflightReceivesExperiment(this.count, this.Metrics, this.Settings);

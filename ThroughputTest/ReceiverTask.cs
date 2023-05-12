@@ -19,11 +19,13 @@ namespace ThroughputTest
     sealed class ReceiverTask : PerformanceTask
     {
         readonly List<Task> receivers;
+        readonly bool debugMode;
 
         public ReceiverTask(Settings settings, Metrics metrics, CancellationToken cancellationToken)
             : base(settings, metrics, cancellationToken)
         {
             this.receivers = new List<Task>();
+            this.debugMode = settings.DebugMode;
         }
 
         protected override Task OnOpenAsync()
@@ -58,7 +60,7 @@ namespace ThroughputTest
             await Task.Delay(TimeSpan.FromMilliseconds(Settings.WorkDuration));
             this.Settings.MaxInflightReceives.Changing += (a, e) => AdjustSemaphore(e, semaphore);
 
-            for (int j = 0; j < Settings.MessageCount && !this.CancellationToken.IsCancellationRequested; j ++)
+            for (int j = 0; j < Settings.MessageCount && !this.CancellationToken.IsCancellationRequested; j++)
             {
                 var receiveMetrics = new ReceiveMetrics() { Tick = sw.ElapsedTicks };
 
@@ -93,8 +95,13 @@ namespace ThroughputTest
                             {
                                 done.Release();
                             }
+
+                            if (debugMode && t.Exception != null)
+                            {
+                                Console.WriteLine(t.Exception.Message);
+                            }
                         }
-                        else 
+                        else
                         {
                             receiveMetrics.Receives = receiveMetrics.Messages = 1;
                             nsec = sw.ElapsedTicks;
@@ -164,6 +171,11 @@ namespace ThroughputTest
                             {
                                 done.Release();
                             }
+
+                            if (debugMode && t.Exception != null)
+                            {
+                                Console.WriteLine(t.Exception.Message);
+                            }
                         }
                         else
                         {
@@ -207,6 +219,11 @@ namespace ThroughputTest
                                             {
                                                 done.Release();
                                             }
+
+                                            if (debugMode && t.Exception != null)
+                                            {
+                                                Console.WriteLine(t.Exception.Message);
+                                            }
                                         });
                                     }
                                 }
@@ -229,6 +246,11 @@ namespace ThroughputTest
                                             else
                                             {
                                                 receiveMetrics.Errors = 1;
+                                            }
+
+                                            if (debugMode && t.Exception != null)
+                                            {
+                                                Console.WriteLine(t.Exception.Message);
                                             }
                                         }
                                         else
@@ -265,7 +287,7 @@ namespace ThroughputTest
                             }
                         }
                     }).Fork();
-                    
+
                 }
             }
             await done.WaitAsync();

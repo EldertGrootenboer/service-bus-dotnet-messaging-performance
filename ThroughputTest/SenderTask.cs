@@ -19,11 +19,13 @@ namespace ThroughputTest
     sealed class SenderTask : PerformanceTask
     {
         readonly List<Task> senders;
+        readonly bool debugMode;
 
         public SenderTask(Settings settings, Metrics metrics, CancellationToken cancellationToken)
             : base(settings, metrics, cancellationToken)
         {
             this.senders = new List<Task>();
+            this.debugMode = settings.DebugMode;
         }
 
         protected override Task OnOpenAsync()
@@ -64,8 +66,8 @@ namespace ThroughputTest
                 semaphore.Wait();
                 //await semaphore.WaitAsync().ConfigureAwait(false);
                 sendMetrics.InflightSends = this.Settings.MaxInflightSends.Value - semaphore.CurrentCount;
-                sendMetrics.GateLockDuration100ns = sw.ElapsedTicks - nsec; 
-                                
+                sendMetrics.GateLockDuration100ns = sw.ElapsedTicks - nsec;
+
                 if (Settings.SendDelay > 0)
                 {
                     await Task.Delay(Settings.SendDelay);
@@ -171,6 +173,12 @@ namespace ThroughputTest
                         sendMetrics.Errors = 1;
                     }
                 }
+
+                if (debugMode)
+                {
+                    Console.WriteLine(x.Message);
+                }
+
                 return true;
             });
 

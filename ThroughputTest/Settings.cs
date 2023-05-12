@@ -67,6 +67,9 @@ namespace ThroughputTest
         [Option('w', "receive-work-duration", Required = false, HelpText = "Work simulation delay between receive and completion (milliseconds, default 0, no work)")]
         public int WorkDuration { get; private set; } = 0;
 
+        [Option('D', "debug-mode", Required = false, HelpText = "Enable debug mode")]
+        public bool DebugMode { get; private set; } = false;
+
         public void PrintSettings()
         {
             Console.WriteLine("Settings:");
@@ -84,6 +87,7 @@ namespace ThroughputTest
             Console.WriteLine("{0}: {1}", "MaxInflightReceives", this.CfgMaxInflightReceives);
             Console.WriteLine("{0}: {1}", "MetricsDisplayFrequency", this.MetricsDisplayFrequency);
             Console.WriteLine("{0}: {1}", "WorkDuration", this.WorkDuration);
+            Console.WriteLine("{0}: {1}", "DebugMode", this.DebugMode);
 
             Console.WriteLine();
         }
