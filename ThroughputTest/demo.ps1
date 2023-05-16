@@ -1,13 +1,76 @@
 # Demo 1
-# $senders = 1
-# $receivers = 1
+$senders = 1
+$receivers = 1
+$inflightSends = 1
+$inflightReceives = 1
+$prefetchCount = 0
+$sendBatchCount = 0
+$receiveBatchCount = 0
+
+# Demo 2
+# $senders = 50
+# $receivers = 100
 # $inflightSends = 1
 # $inflightReceives = 1
 # $prefetchCount = 0
 # $sendBatchCount = 0
 # $receiveBatchCount = 0
 
-### Results ###
+# Demo 3
+# $senders = 1
+# $receivers = 1
+# $inflightSends = 100
+# $inflightReceives = 100
+# $prefetchCount = 0
+# $sendBatchCount = 0
+# $receiveBatchCount = 0
+
+# # Demo 4
+# $senders = 50
+# $receivers = 100
+# $inflightSends = 100
+# $inflightReceives = 100
+# $prefetchCount = 0
+# $sendBatchCount = 0
+# $receiveBatchCount = 0
+
+# # Demo 5
+# $senders = 50
+# $receivers = 100
+# $inflightSends = 100
+# $inflightReceives = 100
+# $prefetchCount = 100
+# $sendBatchCount = 200
+# $receiveBatchCount = 0
+
+# Settings
+$queue = "queue-lm-"
+$debugMode = $true
+[Int]$suffix = 0
+$suffixCounterPath = "C:\Repositories\service-bus-dotnet-messaging-performance\ThroughputTest\counter.txt"
+
+# Suffix counter
+Get-Content -Path $suffixCounterPath | ForEach-Object { $suffix = $_ }
+
+# Calculated values
+$previousSuffix = $suffix - 1
+$nextSuffix = $suffix + 1
+$newQueue = $queue + $suffix
+$previousQueue = $queue + $previousSuffix
+
+# Add 1 to suffix and update suffix counter in file
+Set-Content -Path $suffixCounterPath -Value $nextSuffix
+
+# Create infrastructure
+az servicebus queue delete --name $previousQueue --resource-group rg-eldert-pg --namespace-name sb-eldert-pg-performance-test-1-partition
+az servicebus queue create --name $newQueue --resource-group rg-eldert-pg --namespace-name sb-eldert-pg-performance-test-1-partition --max-size 81920
+
+# Run locally
+Set-Location "C:\Repositories\service-bus-dotnet-messaging-performance\ThroughputTest\bin\Release\net7.0"
+dotnet ThroughputTest.dll -C 'Endpoint=sb://sb-eldert-pg-performance-test-1-partition.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=puJ7+PBuMd7MGCP7dH9f8ED5kkTixmyqW+ASbAGa/sE=' -S $newQueue -r $receivers -s $senders -D $debugMode -i $inflightSends -j $inflightReceives -e $prefetchCount -t $sendBatchCount -v $receiveBatchCount
+
+# Results
+### Results Demo 1 ###
 # S|    pstart|      pend|  sbc| mifs|   snd.avg|   snd.med|   snd.dev|   snd.min|   snd.max|   gld.avg|   gld.med|   gld.dev|   gld.min|   gld.max|     msg/s|     total|     sndop|      errs|      busy|   overall|
 # R|    pstart|      pend|  rbc| mifr|   rcv.avg|   rcv.med|   rcv.dev|   rcv.min|   rcv.max|   cpl.avg|   cpl.med|   cpl.dev|   cpl.min|   cpl.max|     msg/s|     total|     rcvop|      errs|      busy|   overall|
 # R|         1|        20|    0|    1|      3.10|      2.03|     20.05|      1.44|    440.56|     43.89|     33.83|     31.03|     21.63|    155.36|     42.30|       846|       846|         0|         0|       846|
@@ -22,17 +85,7 @@
 # R|        40|        60|    0|    1|      2.04|      1.99|      0.36|      1.35|      5.93|     42.94|     34.06|     29.33|     20.81|    145.89|     44.45|       889|       889|         0|         0|      4305|
 # R|        50|        70|    0|    1|      2.09|      2.01|      0.48|      1.41|      7.05|     44.94|     34.47|     31.68|     20.81|    143.11|     42.50|       850|       850|         0|         0|      5155|
 # S|        50|        70|    0|    1|     36.68|     37.07|     14.49|     18.42|    170.44|    183.05|    122.68|     97.67|     90.60|   1392.16|     54.35|      1087|      1087|         0|         0|      5886|
-
-# Demo 2
-# $senders = 50
-# $receivers = 100
-# $inflightSends = 1
-# $inflightReceives = 1
-# $prefetchCount = 0
-# $sendBatchCount = 0
-# $receiveBatchCount = 0
-
-### Results ###
+### Results Demo 2 ###
 # S|    pstart|      pend|  sbc| mifs|   snd.avg|   snd.med|   snd.dev|   snd.min|   snd.max|   gld.avg|   gld.med|   gld.dev|   gld.min|   gld.max|     msg/s|     total|     sndop|      errs|      busy|   overall|
 # R|    pstart|      pend|  rbc| mifr|   rcv.avg|   rcv.med|   rcv.dev|   rcv.min|   rcv.max|   cpl.avg|   cpl.med|   cpl.dev|   cpl.min|   cpl.max|     msg/s|     total|     rcvop|      errs|      busy|   overall|
 # R|         1|        62|    0|    1|    176.76|     27.18|   2423.55|      0.86|  41517.74|     46.10|     27.17|    325.58|      0.00|  40806.78|   2728.75|     54575|     54575|        99|         0|     80180|
@@ -51,17 +104,7 @@
 # S|       102|       122|    0|    1|     35.00|     30.14|     13.89|     15.12|    240.10|    175.11|    144.29|     89.86|      0.52|   1436.63|   2862.15|     57243|     57243|         0|         0|    426975|
 # R|       112|       132|    0|    1|     26.71|     20.71|     25.81|      0.79|    285.02|     44.93|     28.12|     35.41|      8.48|    235.61|   2826.70|     56534|     56534|         0|         0|    483450|
 # S|       112|       132|    0|    1|     35.30|     30.22|     14.88|     14.76|    241.95|    176.56|    145.49|     98.94|      0.52|   2285.72|   2851.90|     57038|     57038|         0|         0|    484013|
-
-# Demo 3
-# $senders = 1
-# $receivers = 1
-# $inflightSends = 100
-# $inflightReceives = 100
-# $prefetchCount = 0
-# $sendBatchCount = 0
-# $receiveBatchCount = 0
-
-### Results ###
+### Results Demo 3 ###
 # S|    pstart|      pend|  sbc| mifs|   snd.avg|   snd.med|   snd.dev|   snd.min|   snd.max|   gld.avg|   gld.med|   gld.dev|   gld.min|   gld.max|     msg/s|     total|     sndop|      errs|      busy|   overall|
 # R|    pstart|      pend|  rbc| mifr|   rcv.avg|   rcv.med|   rcv.dev|   rcv.min|   rcv.max|   cpl.avg|   cpl.med|   cpl.dev|   cpl.min|   cpl.max|     msg/s|     total|     rcvop|      errs|      busy|   overall|
 # R|         1|        20|    0|  100|      7.42|      5.91|     19.89|      2.39|    500.73|     36.16|     26.26|     30.05|      9.08|    205.83|   2297.90|     45958|     45958|         0|         0|     45958|
@@ -76,17 +119,7 @@
 # S|        41|        61|    0|  100|     22.92|     20.63|     12.05|     10.05|    293.63|      2.08|      0.00|     16.50|      0.00|   2738.88|   4427.10|     88542|     88542|         0|         0|    449592|
 # R|        51|        71|    0|  100|      6.03|      5.63|      3.24|      2.28|    115.75|     34.99|     26.55|     27.19|      8.79|    144.15|   2470.70|     49414|     49414|         0|         0|    288045|
 # S|        51|        71|    0|  100|     22.50|     20.47|      8.10|     10.05|    146.01|      2.03|      0.00|     13.63|      0.00|   1153.61|   4512.15|     90243|     90243|         0|         0|    539835|
-
-# # Demo 4
-# $senders = 50
-# $receivers = 100
-# $inflightSends = 100
-# $inflightReceives = 100
-# $prefetchCount = 0
-# $sendBatchCount = 0
-# $receiveBatchCount = 0
-
-### Results ###
+### Results Demo 4 ###
 # S|    pstart|      pend|  sbc| mifs|   snd.avg|   snd.med|   snd.dev|   snd.min|   snd.max|   gld.avg|   gld.med|   gld.dev|   gld.min|   gld.max|     msg/s|     total|     sndop|      errs|      busy|   overall|
 # R|    pstart|      pend|  rbc| mifr|   rcv.avg|   rcv.med|   rcv.dev|   rcv.min|   rcv.max|   cpl.avg|   cpl.med|   cpl.dev|   cpl.min|   cpl.max|     msg/s|     total|     rcvop|      errs|      busy|   overall|
 # R|        13|        50|    0|  100|   4080.20|    882.55|   9746.92|    365.59|  34892.12|    800.35|    798.39|    259.89|      0.00|  32815.55|   5074.50|    101490|    101490|      3243|         0|    143251|
@@ -105,17 +138,7 @@
 # S|        95|       115|    0|  100|    308.39|    274.74|    118.83|    137.25|   1174.60|     28.02|      0.00|    206.54|      0.00|   6096.69|   7272.40|    145448|    145448|         0|         0|    992185|
 # R|       102|       123|    0|  100|   1041.53|    902.54|    507.16|    178.80|   5004.88|    392.33|    335.58|    182.20|     75.15|   1263.11|   7315.50|    146310|    146310|         0|         0|   1114840|
 # S|       105|       125|    0|  100|   1313.66|    287.86|   7090.33|     78.51|  82456.39|    126.94|      0.00|   7096.49|      0.00| 816930.27|   7292.35|    145847|    145847|         0|         0|   1138032|
-
-# # Demo 5
-$senders = 50
-$receivers = 100
-$inflightSends = 100
-$inflightReceives = 100
-$prefetchCount = 100
-$sendBatchCount = 200
-$receiveBatchCount = 0
-
-### Results ###
+### Results Demo 5 ###
 # S|    pstart|      pend|  sbc| mifs|   snd.avg|   snd.med|   snd.dev|   snd.min|   snd.max|   gld.avg|   gld.med|   gld.dev|   gld.min|   gld.max|     msg/s|     total|     sndop|      errs|      busy|   overall|
 # R|    pstart|      pend|  rbc| mifr|   rcv.avg|   rcv.med|   rcv.dev|   rcv.min|   rcv.max|   cpl.avg|   cpl.med|   cpl.dev|   cpl.min|   cpl.max|     msg/s|     total|     rcvop|      errs|      busy|   overall|
 # R|         1|         1|    0|  100|  16972.88|  17201.84|   1071.89|    689.51|  19007.36|   2575.66|   2698.55|   1044.06|      0.00|  14925.14|     42.20|       844|       844|       103|         0|       844|
@@ -138,43 +161,3 @@ $receiveBatchCount = 0
 # S|        53|        74|  200|  100|  34962.56|  35112.41|    996.89|  33165.68|  37904.44|   3418.72|      0.00|   7410.29|      0.00|  40166.24|  28100.00|    562000|      2810|         0|         0|   4957600|
 # R|        78|       103|    0|  100|   3857.48|   6337.47|   3631.08|      0.01|   8344.39|   7107.74|   6820.95|    669.87|   5673.84|   8307.80|    990.00|     19800|     19800|         0|         0|    166652|
 # S|        62|        83|  200|  100|  35122.40|  35226.98|   1072.76|  33521.23|  38232.38|   3362.83|      0.00|   7260.57|      0.00|  40166.24|  28950.00|    579000|      2895|         0|         0|   5536600|
-
-# Settings
-$instances = 30
-$queue = "queue-vm-"
-$debugMode = $true
-[Int]$suffix = 0
-$suffixCounterPath = "C:\Users\Eldert\Downloads\ThroughputTest\counter.txt"
-
-# Suffix counter
-Get-Content -Path $suffixCounterPath | ForEach-Object { $suffix = $_ }
-
-# Calculated values
-$previousSuffix = $suffix - 1
-$nextSuffix = $suffix + 1
-$newQueue = $queue + $suffix
-$previousQueue = $queue + $previousSuffix
-
-# Add 1 to suffix and update suffix counter in file
-Set-Content -Path $suffixCounterPath -Value $nextSuffix
-
-# Create infrastructure
-az servicebus queue delete --name $previousQueue --resource-group rg-eldert-pg --namespace-name sb-eldert-pg-performance-test-1-partition
-az servicebus queue create --name $newQueue --resource-group rg-eldert-pg --namespace-name sb-eldert-pg-performance-test-1-partition --max-size 81920
-
-# # Run in ACI
-# for ($i = 0; $i -lt $instances; $i++)
-# {
-#     az container create --name aci-eldert-pg-performance-test-$i --resource-group rg-eldert-pg --image acreldertpgperformancetest.azurecr.io/throughput-test-image:dev --restart-policy OnFailure --cpu 4 --memory 16 --location eastus --command-line "dotnet ThroughputTest.dll -C 'Endpoint=sb://sb-eldert-pg-performance-test-1-partition.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=puJ7+PBuMd7MGCP7dH9f8ED5kkTixmyqW+ASbAGa/sE=' -S $newQueue -s $senders -r $receivers -i $inFlightSends -j $inFlightReceives" --registry-login-server acreldertpgperformancetest.azurecr.io --registry-username acreldertpgperformancetest --registry-password migTirF3ERuId1R+R3UnFQNpUkr4KFhvuGSrOOnUlv+ACRDzGCI5 --no-wait
-# }
-
-# # Delete from ACI
-# for ($i = 0; $i -lt $instances; $i++)
-# {
-#     az container delete --name aci-eldert-pg-performance-test-$i --resource-group rg-eldert-pg --yes
-# }
-
-
-# Run locally
-cd "C:\Users\Eldert\Downloads\ThroughputTest\bin\Release\net7.0\publish"
-dotnet ThroughputTest.dll -C 'Endpoint=sb://sb-eldert-pg-performance-test-1-partition.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=puJ7+PBuMd7MGCP7dH9f8ED5kkTixmyqW+ASbAGa/sE=' -S $newQueue -r $receivers -s $senders -D $debugMode -i $inflightSends -j $inflightReceives -e $prefetchCount -t $sendBatchCount -v $receiveBatchCount
