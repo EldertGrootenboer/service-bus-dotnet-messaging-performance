@@ -67,7 +67,7 @@ az servicebus queue create --name $newQueue --resource-group rg-eldert-pg --name
 
 # Run locally
 Set-Location "C:\Repositories\service-bus-dotnet-messaging-performance\ThroughputTest\bin\Release\net7.0"
-dotnet ThroughputTest.dll -C 'Endpoint=sb://sb-eldert-pg-performance-test-1-partition.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=puJ7+PBuMd7MGCP7dH9f8ED5kkTixmyqW+ASbAGa/sE=' -S $newQueue -r $receivers -s $senders -D $debugMode -i $inflightSends -j $inflightReceives -e $prefetchCount -t $sendBatchCount -v $receiveBatchCount
+dotnet ThroughputTest.dll -C '<connection-string>' -S $newQueue -r $receivers -s $senders -D $debugMode -i $inflightSends -j $inflightReceives -e $prefetchCount -t $sendBatchCount -v $receiveBatchCount
 
 # Results
 ### Results Demo 1 ###
